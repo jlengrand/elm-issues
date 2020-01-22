@@ -1,80 +1,79 @@
-module AWSApi exposing (..)
+module Awsapi exposing (..)
 
+import Json.Decode exposing (Decoder, float, list, string, succeed)
 import Json.Decode.Pipeline exposing (required)
-import Json.Decode exposing (string, float, succeed, list, Decoder)
 
-type alias Landmark = 
-    {
-        name: String
-        , x : Float
-        , y : Float
+
+type alias Landmark =
+    { name : String
+    , x : Float
+    , y : Float
     }
 
-type alias BoundingBox = 
-    {
-        height : Float
-        , left : Float
-        , top : Float
-        , width : Float
+
+type alias BoundingBox =
+    { height : Float
+    , left : Float
+    , top : Float
+    , width : Float
     }
 
-type alias Quality = 
-    {
-        brightness : Float
-        , sharpness: Float
 
+type alias Quality =
+    { brightness : Float
+    , sharpness : Float
     }
 
-type alias Pose = 
-    {
-        roll: Float
-        , yaw : Float
-        , pitch : Float
+
+type alias Pose =
+    { roll : Float
+    , yaw : Float
+    , pitch : Float
     }
 
-type alias FaceInfo = 
-    {
-        boundingBox : BoundingBox
-        , confidence : Float
-        , landmarks : List Landmark
-        , pose : Pose
-        , quality : Quality
+
+type alias FaceInfo =
+    { boundingBox : BoundingBox
+    , confidence : Float
+    , landmarks : List Landmark
+    , pose : Pose
+    , quality : Quality
     }
 
-type alias Face = 
-    {
-        -- BoundingBox
-        name : String
-        , urls : List String
-        , matchConfidence : Float
-        , id : String
-        , faceInfo: FaceInfo
+
+type alias Face =
+    { -- BoundingBox
+      name : String
+    , urls : List String
+    , matchConfidence : Float
+    , id : String
+    , faceInfo : FaceInfo
     }
+
 
 type alias FaceData =
-    {
-        celebrityFaces: List Face
-        , unrecognizedFaces : List FaceInfo
+    { celebrityFaces : List Face
+    , unrecognizedFaces : List FaceInfo
     }
 
-type alias S3Data = 
-    {
-        bucket : String, 
-        key : String, 
-        location: String 
+
+type alias S3Data =
+    { bucket : String
+    , key : String
+    , location : String
     }
 
-type alias FaceDataPayload = 
-    { 
-        s3Data : S3Data
-        , faceData : FaceData
+
+type alias FaceDataPayload =
+    { s3Data : S3Data
+    , faceData : FaceData
     }
+
 
 type alias ImageData =
     { content : String
     , name : String
     }
-
 
 
 poseDecoder : Decoder Pose
@@ -84,11 +83,13 @@ poseDecoder =
         |> required "Yaw" float
         |> required "Pitch" float
 
+
 qualityDecoder : Decoder Quality
 qualityDecoder =
     succeed Quality
         |> required "Brightness" float
         |> required "Sharpness" float
+
 
 boundingBoxDecoder : Decoder BoundingBox
 boundingBoxDecoder =
@@ -98,6 +99,7 @@ boundingBoxDecoder =
         |> required "Top" float
         |> required "Width" float
 
+
 landmarkDecoder : Decoder Landmark
 landmarkDecoder =
     succeed Landmark
@@ -105,9 +107,11 @@ landmarkDecoder =
         |> required "X" float
         |> required "Y" float
 
+
 landmarkListDecoder : Decoder (List Landmark)
 landmarkListDecoder =
     list landmarkDecoder
+
 
 faceInfoDecoder : Decoder FaceInfo
 faceInfoDecoder =
@@ -118,12 +122,14 @@ faceInfoDecoder =
         |> required "Pose" poseDecoder
         |> required "Quality" qualityDecoder
 
+
 urlListDecoder : Decoder (List String)
 urlListDecoder =
     list string
 
+
 faceDecoder : Decoder Face
-faceDecoder = 
+faceDecoder =
     succeed Face
         |> required "Name" string
         |> required "Urls" urlListDecoder
@@ -136,27 +142,29 @@ faceListDecoder : Decoder (List Face)
 faceListDecoder =
     list faceDecoder
 
+
 faceInfoListDecoder : Decoder (List FaceInfo)
 faceInfoListDecoder =
     list faceInfoDecoder
 
+
 faceDataDecoder : Decoder FaceData
-faceDataDecoder = 
+faceDataDecoder =
     succeed FaceData
         |> required "CelebrityFaces" faceListDecoder
         |> required "UnrecognizedFaces" faceInfoListDecoder
 
 
 s3DataDecoder : Decoder S3Data
-s3DataDecoder = 
+s3DataDecoder =
     succeed S3Data
         |> required "Bucket" string
         |> required "Key" string
         |> required "Location" string
+
 
 faceDataPayloadDecoder : Decoder FaceDataPayload
 faceDataPayloadDecoder =
     succeed FaceDataPayload
         |> required "s3Data" s3DataDecoder
         |> required "faceData" faceDataDecoder
-        
